@@ -19,17 +19,26 @@ private func _parsePathRawString<S: StringProtocol>(_ string: S) -> [String] {
   var isEscaping = false // Indicates the following char is escaping.
   var isQuoted = false   // Indicates the beginning of quotation.
   var components: [String] = []
-  var positioning: String = String()
+  var positioning: String?
   
   func advance() {
     defer {
-      positioning.removeAll()
+      positioning = nil
     }
-    components.append(positioning)
+    
+    if let val = positioning {
+      components.append(val)
+    }
   }
   
-  func read(_ char: Character) {
-    positioning.append(char)
+  func read(_ char: Character, readonly: Bool = false) {
+    positioning == nil ? positioning = "" : ()
+    positioning?.append(char)
+    
+    guard !readonly else {
+      return
+    }
+    
     isEscaping ? isEscaping.toggle() : ()
   }
   
@@ -47,10 +56,12 @@ private func _parsePathRawString<S: StringProtocol>(_ string: S) -> [String] {
     case "'"  where isQuotable():   isQuoted = true; read(char)
     case "\"" where isUnQuotable(): isQuoted = false; read(char)
     case "'"  where isUnQuotable(): isQuoted = false; read(char)
-    case "\\" where isEscapable():  isEscaping = true; read(char)
+    case "\\" where isEscapable():  isEscaping = true; read(char, readonly: true)
     default: read(char)
     }
   }
+  
+  advance()
   
   return components
 }
