@@ -1,18 +1,25 @@
 import XCTest
 @testable import Path
 
+// MARK: - TestUtils.
+
+private func _path(_ path: Path, componentsEqualTo components: [String]) -> Bool {
+  return path._components.map { $0.rawValue } == components
+}
+
+// MARK: - PathTests.
+
 final class PathTests: XCTestCase {
   static var allTests = [
     ("testEscaping", testEscaping),
   ]
   
   func testEscaping() {
-    let path = Path("/usr/local/\\/bin")
-    XCTAssertEqual(["usr", "local", "\\/bin"], path._components.map { $0.rawValue })
+    XCTAssertTrue(_path(Path("/usr/local/\\/bin"), componentsEqualTo: ["usr", "local", "\\/bin"]))
   }
   
   func testQuoting() {
-    XCTAssertEqual(["usr", "local", "'/'bin"], Path("/usr/local/'/'bin")._components.map { $0.rawValue })
-    XCTAssertEqual(["usr", "local", "\"/\"bin"], Path("/usr/local/\"/\"bin")._components.map { $0.rawValue })
+    XCTAssertTrue(_path(Path("/usr/local/'/'bin"), componentsEqualTo: ["usr", "local", "'/'bin"]))
+    XCTAssertTrue(_path(Path("/usr/local/\"/\"bin"), componentsEqualTo: ["usr", "local", "\"/\"bin"]))
   }
 }
