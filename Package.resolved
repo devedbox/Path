@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Sledge",
+        "repositoryURL": "https://github.com/devedbox/Sledge.git",
+        "state": {
+          "branch": null,
+          "revision": "f9e731fc07e48e6410d6632f3312de1cd5461b45",
+          "version": "0.0.5"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

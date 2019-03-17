@@ -5,16 +5,13 @@
 //  Created by devedbox on 2019/3/15.
 //
 
-#if os(macOS)
-import Darwin
-#else
-import Glibc
-#endif
+import CollectionPlus
 
 // POSIX.1-2017 General Concepts: http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_13
 //
 // 4.13 Pathname Resolution
 
+/// Parsing the given string of `StringProtocol` to path components of POSIX style.
 private func _parsePathRawString<S: StringProtocol>(_ string: S) -> [String] {
   var isEscaping = false // Indicates the following char is escaping.
   var isQuoted = false   // Indicates the beginning of quotation.
@@ -65,6 +62,8 @@ private func _parsePathRawString<S: StringProtocol>(_ string: S) -> [String] {
   
   return components
 }
+
+// MARK: - Path.Component.
 
 extension Path {
   /// The component of the path.
@@ -161,7 +160,7 @@ extension Path {
     
     public static let emptiness = Trimming(rawValue: 1 << 0, filters: [_IdenticalFilter(rawValue: 1 << 0, filter: { $0 != .empty })])
     public static let `self`    = Trimming(rawValue: 1 << 1, filters: [_IdenticalFilter(rawValue: 1 << 1, filter: { $0 != .`self` })])
-    public static let parent    = Trimming(rawValue: 1 << 2, filters: [_IdenticalFilter(rawValue: 1 << 2, filter: { $0 == $0 })])
+    public static let parent    = Trimming(rawValue: 1 << 2, filters: [_IdenticalFilter(rawValue: 1 << 2, filter: { _ in true })])
     
     private var _filters: [_IdenticalFilter]
     private let _rawValue: RawValue
@@ -182,6 +181,8 @@ extension Path {
       _filters = filters
     }
     
+    /// The filter func used as the filter impl of components of `[Component]` by combaining the
+    /// filters of `_filters`.
     internal func filter(_ comp: Component) -> Bool {
       return _filters.reduce(true) { $0 && $1.filter(comp) }
     }
@@ -207,10 +208,9 @@ extension Path {
     ///
     /// - Parameter other: A set of the same type as the current set.
     public mutating func formUnion(_ other: Trimming) {
-      let filters = self._filters
       self = Trimming(
         rawValue: _rawValue | other._rawValue,
-        filters: Array(Set(filters).union(Set(other._filters)))
+        filters: _filters.toSet().union(other._filters.toSet()).toArray()
       )
     }
     /// Removes the elements of this set that aren't also in the given set.
@@ -227,10 +227,9 @@ extension Path {
     ///
     /// - Parameter other: A set of the same type as the current set.
     public mutating func formIntersection(_ other: Trimming) {
-      let filters = self._filters
       self = Trimming(
         rawValue: _rawValue & other.rawValue,
-        filters: Array(Set(filters).intersection(Set(other._filters)))
+        filters: _filters.toSet().intersection(other._filters.toSet()).toArray()
       )
     }
     /// Removes the elements of the set that are also in the given set and adds
@@ -250,10 +249,9 @@ extension Path {
     ///
     /// - Parameter other: A set of the same type.
     public mutating func formSymmetricDifference(_ other: Trimming) {
-      let filters = self._filters
       self = Trimming(
         rawValue: _rawValue ^ other._rawValue,
-        filters: Array(Set(filters).symmetricDifference(Set(other._filters)))
+        filters: _filters.toSet().symmetricDifference(other._filters.toSet()).toArray()
       )
     }
   }
@@ -265,8 +263,8 @@ extension Path {
     
     _components.filter(trimming.filter).forEach {
       if
-        trimming.contains(.parent),
         $0 == .parent,
+        trimming.contains(.parent),
         let index = components.lastIndex(where: { $0 == .item(named: "") })
       {
         components.remove(at: index)
