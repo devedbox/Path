@@ -71,14 +71,14 @@ extension Path {
   public enum Component: RawRepresentable {
     public typealias RawValue = String
     
-    case current
+    case `self`
     case parent
     case empty
     case item(named: String)
     
     public var rawValue: String {
       switch self {
-      case .current: return "."
+      case .`self`: return "."
       case .parent:  return ".."
       case .empty:   return ""
       case .item(named: let value): return value
@@ -87,7 +87,7 @@ extension Path {
     
     public init(rawValue rawString: String) {
       switch rawString {
-      case ".":  self = .current
+      case ".":  self = .`self`
       case "..": self = .parent
       case "":   self = .empty
       default:   self = .item(named: rawString)
@@ -160,7 +160,7 @@ extension Path {
     }
     
     public static let emptiness = Trimming(rawValue: 1 << 0, filters: [_IdenticalFilter(rawValue: 1 << 0, filter: { $0 != .empty })])
-    public static let `self`    = Trimming(rawValue: 1 << 1, filters: [_IdenticalFilter(rawValue: 1 << 1, filter: { $0 != .current })])
+    public static let `self`    = Trimming(rawValue: 1 << 1, filters: [_IdenticalFilter(rawValue: 1 << 1, filter: { $0 != .`self` })])
     public static let parent    = Trimming(rawValue: 1 << 2, filters: [_IdenticalFilter(rawValue: 1 << 2, filter: { $0 == $0 })])
     
     private var _filters: [_IdenticalFilter]
