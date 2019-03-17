@@ -261,6 +261,20 @@ extension Path {
 
 extension Path {
   public func rawValue(trimming: Trimming) -> RawValue {
-    return _components.filter(trimming.filter).map { $0.rawValue }.joined(separator: String(Path._pathComponentsDelimiter))
+    var components: [Component] = []
+    
+    _components.filter(trimming.filter).forEach {
+      if
+        trimming.contains(.parent),
+        $0 == .parent,
+        let index = components.lastIndex(where: { $0 == .item(named: "") })
+      {
+        components.remove(at: index)
+      } else {
+        components.append($0)
+      }
+    }
+    
+    return components.map { $0.rawValue }.joined(separator: String(Path._pathComponentsDelimiter))
   }
 }
